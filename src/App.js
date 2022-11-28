@@ -1,25 +1,170 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect, useState } from "react";
+import ReactPlayer from "react-player";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import "materialize-css/dist/css/materialize.min.css";
 
-function App() {
+import { MUSIC_ADD_TIME, MUSIC_DB, MUSIC_STOP } from "./DB_music/MusicList_DB";
+import MusicList from "./components/MusicList";
+import Header from "./components/Header";
+import NotFound from "./components/NotFound";
+import { filterFuncID, filterFuncSTRING, findGA, getRandomInt } from "./config";
+
+export default function App() {
+  const [musicId, setMusicId] = useState(getRandomInt(MUSIC_DB.length));
+  const [playing, setPlaying] = useState(false);
+  const [addedMusic, setAddedMusic] = useState([]);
+  const [filtereAddedMusic, setFiltereAddedMusic] = useState([]);
+
+  const [recList, setRecList] = useState({
+    author: [],
+    genre: [],
+  });
+  const [filteredRecList, setFilteredRecList] = useState({
+    author: [],
+    genre: [],
+  });
+
+  const [genreRec, setGenreRec] = useState([]);
+  const [authorRec, setAuthorRec] = useState([]);
+
+  //ГОЛОВНАЯ БОЛЬ
+  const recomAudio = (musID) => {
+    const audioauthor = MUSIC_DB[musID].author; //находим нужный обьект в массиве
+    const audioGenre = MUSIC_DB[musID].genre; //находим нужный обьект в массиве
+
+    const audioListNotFiltered = [...recList.author, ...audioauthor];
+    const genreListNotFiltered = [...recList.genre, ...audioGenre];
+    setRecList({
+      author: [...audioListNotFiltered, ...recList.author],
+      genre: [...genreListNotFiltered, ...recList.genre],
+    });
+  };
+
+  const [timer, setTimer] = useState(0);
+  const [examination, setExamination] = useState(false);
+
+  //воспроизвести музыку
+  const handleSelectMusic = (id) => {
+    setMusicId(id);
+    setExamination(true);
+    setPlaying(MUSIC_STOP);
+  };
+
+  //добавить музыку
+  const handleAddMusic = (mus) => {
+    recomAudio(mus.id);
+    setAddedMusic([...addedMusic, mus]);
+  };
+
+  //отфильтровать музыку
+  useEffect(() => {
+    setFiltereAddedMusic(filterFuncID(addedMusic));
+  }, [addedMusic]);
+
+  //делаем таймер
+  useEffect(() => {
+    if (examination) {
+      if (timer > 0) {
+        setTimer(0);
+      }
+      const interval = setInterval(() => {
+        setTimer((prevStater) => prevStater + 1);
+      }, 1000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    }
+  }, [musicId]);
+
+  //проверка количества времени
+  useEffect(() => {
+    if (examination) {
+      if (timer > MUSIC_ADD_TIME) {
+        setExamination(false);
+        recomAudio(musicId);
+      }
+    }
+  }, [timer]);
+
+  // отфильтровать автора и жанра
+  useEffect(() => {
+    setFilteredRecList({
+      author: filterFuncSTRING(recList.author),
+      genre: filterFuncSTRING(recList.genre),
+    });
+  }, [recList.author, recList.genre]);
+
+  //получаем реки
+  useEffect(() => {
+    setAuthorRec(filterFuncID(findGA(filteredRecList.author, "author")));
+    setGenreRec(filterFuncID(findGA(filteredRecList.genre, "genre")));
+  }, [filteredRecList.author, filteredRecList.genre]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <BrowserRouter>
+        <div className="App">
+          <Header />
+          {filteredRecList.author + " "}
+          <br />
+          {filteredRecList.genre + " "}
+          <br />
+          {timer}
+          <Routes>
+            <Route
+              index
+              path="/"
+              element={
+                <MusicList
+                  list={MUSIC_DB}
+                  selectMus={handleSelectMusic}
+                  addMusic={handleAddMusic}
+                />
+              }
+            />
+            <Route
+              path="added"
+              element={
+                <MusicList
+                  list={filtereAddedMusic}
+                  selectMus={handleSelectMusic}
+                  addMusic={handleAddMusic}
+                />
+              }
+            />
+            <Route
+              path="genre"
+              element={
+                <MusicList
+                  list={genreRec}
+                  selectMus={handleSelectMusic}
+                  addMusic={handleAddMusic}
+                />
+              }
+            />
+            <Route
+              path="author"
+              element={
+                <MusicList
+                  list={authorRec}
+                  selectMus={handleSelectMusic}
+                  addMusic={handleAddMusic}
+                />
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+
+          <ReactPlayer
+            className="player"
+            playing={playing}
+            url={MUSIC_DB[musicId].url}
+            height="150px"
+            width="100vw"
+          />
+        </div>
+      </BrowserRouter>
+    </>
   );
 }
-
-export default App;
