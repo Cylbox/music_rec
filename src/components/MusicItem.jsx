@@ -9,9 +9,9 @@ const MusicItem = (props) => {
     <>
       <div className="col s3 music-box">
         <p>
-          {el.author} - {el.name}
+          {el.author + " "} - {el.name}
         </p>
-        <p>{el.genre}</p>
+        <p>{el.genre + " "}</p>
         <div className="bottom-button">
           <div
             className="btn  btn-small red"

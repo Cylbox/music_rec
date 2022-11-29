@@ -29,8 +29,8 @@ export default function App() {
 
   //ГОЛОВНАЯ БОЛЬ
   const recomAudio = (musID) => {
-    const audioauthor = MUSIC_DB[musID].author; //находим нужный обьект в массиве
-    const audioGenre = MUSIC_DB[musID].genre; //находим нужный обьект в массиве
+    const audioauthor = MUSIC_DB[musID].author;
+    const audioGenre = MUSIC_DB[musID].genre;
 
     const audioListNotFiltered = [...recList.author, ...audioauthor];
     const genreListNotFiltered = [...recList.genre, ...audioGenre];
@@ -50,7 +50,6 @@ export default function App() {
     setPlaying(MUSIC_STOP);
   };
 
-  //добавить музыку
   const handleAddMusic = (mus) => {
     recomAudio(mus.id);
     setAddedMusic([...addedMusic, mus]);
@@ -61,7 +60,7 @@ export default function App() {
     setFiltereAddedMusic(filterFuncID(addedMusic));
   }, [addedMusic]);
 
-  //делаем таймер
+  //таймер
   useEffect(() => {
     if (examination) {
       if (timer > 0) {
@@ -87,7 +86,7 @@ export default function App() {
     }
   }, [timer]);
 
-  // отфильтровать автора и жанра
+  //отфильтровать автора и жанра
   useEffect(() => {
     setFilteredRecList({
       author: filterFuncSTRING(recList.author),
@@ -95,7 +94,7 @@ export default function App() {
     });
   }, [recList.author, recList.genre]);
 
-  //получаем реки
+  //реки
   useEffect(() => {
     setAuthorRec(filterFuncID(findGA(filteredRecList.author, "author")));
     setGenreRec(filterFuncID(findGA(filteredRecList.genre, "genre")));
